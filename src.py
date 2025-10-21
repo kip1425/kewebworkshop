@@ -8,6 +8,7 @@ import asyncio
 BOT_TOKEN = os.getenv("botToken")
 DB_URL = os.getenv("DATABASE_PUBLIC_URL")
 
+print("DB_URL:", os.getenv("DATABASE_URL"))
 # Quiz questions
 QUESTIONS = [
     {
