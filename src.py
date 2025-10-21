@@ -6,6 +6,7 @@ import asyncio
 
 # Load env variables
 BOT_TOKEN = os.getenv("botToken")
+DB_URL = os.getenv("DATABASE_PUBLIC_URL")
 
 # Quiz questions
 QUESTIONS = [
@@ -161,8 +162,6 @@ async def leaderboard(update, context):
 
 # Main
 async def main():
-    global DB_URL
-    DB_URL = os.getenv("DATABASE_PUBLIC_URL")
     if not DB_URL:
         raise RuntimeError("Environment var is missing")
     await initDB()
