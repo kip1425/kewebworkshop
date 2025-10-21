@@ -174,4 +174,4 @@ async def main():
     await bot.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.get_event_loop().run_until_complete(main())
