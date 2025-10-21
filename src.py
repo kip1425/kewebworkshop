@@ -1,15 +1,14 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
-from dotenv import load_dotenv
+import asyncpg
 import os
-import aiosqlite
 import asyncio
 
-# Load bot token from .env file
-load_dotenv()
+# Load env variables
 BOT_TOKEN = os.getenv("botToken")
+DB_URL = os.getenv("databaseUrl")
 
-# Questions for quiz
+# Quiz questions
 QUESTIONS = [
     {
         "question": "What is KEVII's JCRC President's name?",
@@ -28,55 +27,74 @@ QUESTIONS = [
     }
 ]
 
-# Dictionary to track which question user is on
+# Dictionary to track which question each user is currently on
 userProgress = {}
 
-# Database path
-DB_PATH = "database.db"
-
-# Function to initialise database
+# Database functions
 async def initDB():
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS scores (
-                userId INTEGER,
-                username TEXT,
-                score INTEGER,
-                attempt INTEGER,
-                PRIMARY KEY(userId, attempt)
-            )
-        """)
-        await db.commit()
+    conn = await asyncpg.connect(DB_URL)
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS scores (
+            userId BIGINT,
+            username TEXT,
+            score INT,
+            attempt INT,
+            PRIMARY KEY(userId, attempt)
+        )
+    """)
+    await conn.close()
 
-# Helper function to update database
-async def updateDB(userId, username, delta):
-    async with aiosqlite.connect(DB_PATH) as db:
-        select = await db.execute(f"SELECT MAX(attempt) FROM scores WHERE userId = {userId}")
-        attempt = await select.fetchone()
+async def getLatestAttempt(userId):
+    conn = await asyncpg.connect(DB_URL)
+    row = await conn.fetchrow(
+        "SELECT attempt FROM scores WHERE userId=$1 ORDER BY attempt DESC LIMIT 1",
+        userId
+    )
+    await conn.close()
+    return row['attempt'] if row else 0
 
-        # Checks if row exists before updating db
-        if attempt[0] is not None:
-            await db.execute(f"UPDATE scores SET score = score + {delta} WHERE userId = {userId} AND attempt = {attempt[0]}")
-        await db.commit()
+async def createAttempt(userId, username):
+    attempt = await getLatestAttempt(userId) + 1
+    conn = await asyncpg.connect(DB_URL)
+    await conn.execute(
+        "INSERT INTO scores(userId, username, score, attempt) VALUES($1, $2, 0, $3)",
+        userId, username, attempt
+    )
+    await conn.close()
+    return attempt
+
+async def updateScore(userId, delta):
+    attempt = await getLatestAttempt(userId)
+    conn = await asyncpg.connect(DB_URL)
+    await conn.execute(
+        "UPDATE scores SET score = score + $1 WHERE userId=$2 AND attempt=$3",
+        delta, userId, attempt
+    )
+    await conn.close()
+
+async def getScore(userId):
+    attempt = await getLatestAttempt(userId)
+    conn = await asyncpg.connect(DB_URL)
+    row = await conn.fetchrow(
+        "SELECT score FROM scores WHERE userId=$1 AND attempt=$2",
+        userId, attempt
+    )
+    await conn.close()
+    return row["score"] if row else 0
 
 # /start
 async def start(update, context):
     userId = update.effective_user.id
     username = update.effective_user.username
+
+    # Start at first ques
     userProgress[userId] = 0
     await update.message.reply_text("Type /leaderboard to view leaderboard!")
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        select = await db.execute(f"SELECT MAX(attempt) FROM scores WHERE userId = {userId}")
-        attempt = await select.fetchone()
-        newAttempt = 0
+    # Create a new attempt row in the database
+    await createAttempt(userId, username)
 
-        # Checks if row exists before updating db
-        if attempt[0] is not None:
-            # /start creates a row with a new attempt if user already exists in db
-            newAttempt = attempt[0] + 1
-        await db.execute(f"INSERT INTO scores VALUES({userId}, '{username}', 0, {newAttempt})")
-        await db.commit()
+    # Send the first question
     await sendQuestion(update.message, update.effective_user)
 
 # Helper function to send questions
@@ -84,28 +102,25 @@ async def sendQuestion(message, user):
     userId = user.id
     quesIndex = userProgress[userId]
 
-    # Checks if user has finished the questions, sends a completion message if true
+    # Checks if user has finished all questions
     if quesIndex >= len(QUESTIONS):
-        async with aiosqlite.connect(DB_PATH) as db:
-            select = await db.execute(f"SELECT score FROM scores WHERE userId = {userId} GROUP BY userId HAVING attempt = MAX(attempt)")
-            score = await select.fetchone()
-            finalScore = score[0] if score else 0
+        finalScore = await getScore(userId)
         await message.reply_text(f"🎉 Quiz complete! You scored {finalScore}/{len(QUESTIONS)}")
         return
-    
+
     question = QUESTIONS[quesIndex]
 
-    # Creates list of buttons for the inline keyboard
+    # Create buttons for inline keyboard
     buttons = []
     for index, description in enumerate(question["options"]):
         buttons.append(InlineKeyboardButton(description, callback_data=str(index)))
 
     await message.reply_text(
-        f"Q{quesIndex + 1}: {question["question"]}",
+        f"Q{quesIndex + 1}: {question['question']}",
         reply_markup=InlineKeyboardMarkup([buttons])
     )
 
-# Handler to process answers
+# Helper function to process answers
 async def processAnswer(update, context):
     query = update.callback_query
     await query.answer()
@@ -114,50 +129,47 @@ async def processAnswer(update, context):
     quesIndex = userProgress[userId]
     question = QUESTIONS[quesIndex]
 
-    # Checks if answer is correct
+    # Check if answer is correct
     userAnswer = int(query.data)
     if userAnswer == question["answer"]:
-        await updateDB(userId, query.from_user.username, 1)
+        await updateScore(userId, 1)
         response = "Correct!"
     else:
         response = "Wrong!"
 
     await query.message.reply_text(response)
 
-    # Updates which question user is on
+    # Move to the next question
     userProgress[userId] += 1
-
-    # Only sends "Next question:" if not at last question
-    if (userProgress[userId] < len(QUESTIONS)):
+    if userProgress[userId] < len(QUESTIONS):
         await query.message.reply_text("Next question:")
+
+    # Send next question or completion message
     await sendQuestion(query.message, query.from_user)
 
-# /leaderboard
+# Handler function to show top 5 users, sorts by descending score then by ascending attempt
 async def leaderboard(update, context):
-    async with aiosqlite.connect(DB_PATH) as db:
-        cursor = await db.execute("""
-            SELECT username, score, attempt FROM scores 
-            ORDER BY score DESC, attempt ASC
-            LIMIT 5""")
-        rows = await cursor.fetchall()
-        
+    conn = await asyncpg.connect(DB_URL)
+    rows = await conn.fetch(
+        "SELECT username, score, attempt FROM scores ORDER BY score DESC, attempt ASC LIMIT 5"
+    )
+    await conn.close()
+
     text = "Top KEVIIANS:\n"
-    for placing, (username, score, attempt) in enumerate(rows, start=1):
-        text += f"{placing}. @{username} Score: {score} Attempt: {attempt}\n"
+    for i, row in enumerate(rows, start=1):
+        text += f"{i}. @{row['username']} Score: {row['score']} Attempt: {row['attempt']}\n"
     await update.message.reply_text(text)
 
-def main():
-    # Initialise database
-    asyncio.get_event_loop().run_until_complete(initDB())
-
-    # Connect handlers to functions
+# Main
+async def main():
+    await initDB()
     bot = ApplicationBuilder().token(BOT_TOKEN).build()
+
     bot.add_handler(CommandHandler("start", start))
     bot.add_handler(CommandHandler("leaderboard", leaderboard))
     bot.add_handler(CallbackQueryHandler(processAnswer))
 
-    # Run bot
-    bot.run_polling()
+    await bot.run_polling()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
