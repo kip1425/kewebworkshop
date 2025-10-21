@@ -6,7 +6,7 @@ import asyncio
 
 # Load env variables
 BOT_TOKEN = os.getenv("botToken")
-DB_URL = os.getenv("DATABASE_URL")
+DB_URL = os.getenv("DATABASE_PUBLIC_URL")
 
 # Quiz questions
 QUESTIONS = [
