@@ -162,6 +162,7 @@ async def leaderboard(update, context):
 
 # Main
 async def main():
+    global DB_URL
     await DB_URL = os.getenv("DATABASE_PUBLIC_URL")
     await initDB()
     bot = ApplicationBuilder().token(BOT_TOKEN).build()
