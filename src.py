@@ -160,18 +160,20 @@ async def leaderboard(update, context):
         text += f"{i}. @{row['username']} Score: {row['score']} Attempt: {row['attempt']}\n"
     await update.message.reply_text(text)
 
-# Main
-async def main():
+async def setup():
     if not DB_URL:
         raise RuntimeError("Environment var is missing")
     await initDB()
+
+if __name__ == "__main__":
+    import asyncio
+
+    asyncio.run(setup())
+
     bot = ApplicationBuilder().token(BOT_TOKEN).build()
 
     bot.add_handler(CommandHandler("start", start))
     bot.add_handler(CommandHandler("leaderboard", leaderboard))
     bot.add_handler(CallbackQueryHandler(processAnswer))
 
-    await bot.run_polling()
-
-if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(main())
+    bot.run_polling()
