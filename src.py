@@ -54,6 +54,7 @@ async def updateDB(userId, username, delta):
         select = await db.execute(f"SELECT MAX(attempt) FROM scores WHERE userId = {userId}")
         attempt = await select.fetchone()
 
+        # Checks if row exists before updating db
         if attempt[0] is not None:
             await db.execute(f"UPDATE scores SET score = score + {delta} WHERE userId = {userId} AND attempt = {attempt[0]}")
         await db.commit()
@@ -64,11 +65,15 @@ async def start(update, context):
     username = update.effective_user.username
     userProgress[userId] = 0
     await update.message.reply_text("Type /leaderboard to view leaderboard!")
+
     async with aiosqlite.connect(DB_PATH) as db:
         select = await db.execute(f"SELECT MAX(attempt) FROM scores WHERE userId = {userId}")
         attempt = await select.fetchone()
         newAttempt = 0
+
+        # Checks if row exists before updating db
         if attempt[0] is not None:
+            # /start creates a row with a new attempt if user already exists in db
             newAttempt = attempt[0] + 1
         await db.execute(f"INSERT INTO scores VALUES({userId}, '{username}', 0, {newAttempt})")
         await db.commit()
@@ -79,6 +84,7 @@ async def sendQuestion(message, user):
     userId = user.id
     quesIndex = userProgress[userId]
 
+    # Checks if user has finished the questions, sends a completion message if true
     if quesIndex >= len(QUESTIONS):
         async with aiosqlite.connect(DB_PATH) as db:
             select = await db.execute(f"SELECT score FROM scores WHERE userId = {userId} GROUP BY userId HAVING attempt = MAX(attempt)")
@@ -88,6 +94,8 @@ async def sendQuestion(message, user):
         return
     
     question = QUESTIONS[quesIndex]
+
+    # Creates list of buttons for the inline keyboard
     buttons = []
     for index, description in enumerate(question["options"]):
         buttons.append(InlineKeyboardButton(description, callback_data=str(index)))
@@ -106,6 +114,7 @@ async def processAnswer(update, context):
     quesIndex = userProgress[userId]
     question = QUESTIONS[quesIndex]
 
+    # Checks if answer is correct
     userAnswer = int(query.data)
     if userAnswer == question["answer"]:
         await updateDB(userId, query.from_user.username, 1)
@@ -115,8 +124,10 @@ async def processAnswer(update, context):
 
     await query.message.reply_text(response)
 
+    # Updates which question user is on
     userProgress[userId] += 1
 
+    # Only sends "Next question:" if not at last question
     if (userProgress[userId] < len(QUESTIONS)):
         await query.message.reply_text("Next question:")
     await sendQuestion(query.message, query.from_user)
@@ -129,6 +140,7 @@ async def leaderboard(update, context):
             ORDER BY score DESC, attempt ASC
             LIMIT 5""")
         rows = await cursor.fetchall()
+        
     text = "Top KEVIIANS:\n"
     for placing, (username, score, attempt) in enumerate(rows, start=1):
         text += f"{placing}. @{username} Score: {score} Attempt: {attempt}\n"
