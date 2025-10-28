@@ -11,34 +11,44 @@ DB_URL = os.getenv("DATABASE_PUBLIC_URL")
 # Quiz questions
 QUESTIONS = [
     {
-        "question": "What is KEVII's JCRC President's name?",
-        "options": ["Butterchicken", "Bhattarchicken", "Bhattacharya", "Bhattarcharya"],
+        "question": "What is KEVII's JCRC President's name?\n1. Butterchicken\n2. Bhattarchicken\n3. Bhattacharya\n4. Bhattarcharya",
+        "options": [1, 2, 3, 4],
         "answer": 2
     },
     {
-        "question": "How many chickens are there in KE?",
-        "options": ["5", "69", "100", "Too many"],
+        "question": "How many chickens are there in KE?\n1. 5\n2. 69\n3. 100\n4. Too many",
+        "options": [1, 2, 3, 4],
         "answer": 3
     },
     {
-        "question": "Do you like eating fried chicken?",
-        "options": ["Yes", "No"],
+        "question": "Do you like eating fried chicken?\n1. Yes\n2. No",
+        "options": [1, 2],
         "answer": 0
     },
     {
-        "question": "Was was the KEWOC VPD? Justin _______",
-        "options": ["Chan", "Poh", "Solomon", "Adiyoga"],
+        "question": "Who was the KEWOC VPD? Justin _______\n1. Chan\n2. Poh\n3. Solomon\n4. Adhiv",
+        "options": [1, 2, 3, 4],
         "answer": 2
     },
     {
-        "question": "Which Malaysian PM stayed in KE?",
-        "options": ["Horng Ern", "Kai Jun", "Yu Le", "Zi Jian"],
+        "question": "Which Malaysian PM stayed in KE?\n1. Horng Ern\n2. Kai Jun\n3. Yu Le\n4. Zi Jian",
+        "options": [1, 2, 3, 4],
         "answer": 0
     },
     {
-        "question": "On which day does the DH serve Cai Fan?",
-        "options": ["Monday", "Tuesday", "Friday", "Saturday"],
+        "question": "On which day does the DH serve Cai Fan?\n1. Monday\n2. Tuesday\n3. Friday\n4. Saturday",
+        "options": [1, 2, 3, 4],
         "answer": 1
+    },
+    {
+        "question": "Which professor is interested in researching monkeys near KE?\n1. Sivasothi N\n2. Martin Henz\n3. Sie Min\n4. Peppe",
+        "options": [1, 2, 3, 4],
+        "answer": 0
+    },
+    {
+        "question": "What is the F Block RF's last name?\n1. Timperio\n2. Giuseppe\n3. Carbonara\n4. Giovanni",
+        "options": [1, 2, 3, 4],
+        "answer": 0
     }
 ]
 
