@@ -26,14 +26,19 @@ QUESTIONS = [
         "answer": 0
     },
     {
-        "question": "Was was the KEWOC VPD? Justin ______",
+        "question": "Was was the KEWOC VPD? Justin _______",
         "options": ["Chan", "Poh", "Solomon", "Adiyoga"],
         "answer": 2
     },
     {
         "question": "Which Malaysian PM stayed in KE?",
-        "options": ["Horng Ern", "Yu Le", "Kai Jun", "Zi Jian"],
+        "options": ["Horng Ern", "Kai Jun", "Yu Le", "Zi Jian"],
         "answer": 0
+    },
+    {
+        "question": "On which day does the DH serve Cai Fan?",
+        "options": ["Monday", "Tuesday", "Friday", "Saturday"],
+        "answer": 1
     }
 ]
 
@@ -121,10 +126,9 @@ async def sendQuestion(message, user):
     question = QUESTIONS[quesIndex]
 
     # Create buttons for inline keyboard
-    buttons = [
-        [InlineKeyboardButton(opt, callback_data=str(i))]
-        for i, opt in enumerate(question["options"])
-    ]
+    buttons = []
+    for index, description in enumerate(question["options"]):
+        buttons.append(InlineKeyboardButton(description, callback_data=str(index)))
 
     await message.reply_text(
         f"Q{quesIndex + 1}: {question['question']}",
