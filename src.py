@@ -46,7 +46,7 @@ QUESTIONS = [
         "answer": 0
     },
     {
-        "question": "🏠 What is the F Block RF's last name?\n1️⃣ Timperio\n2️⃣ Giuseppe\n3️⃣ Carbonara\n4️⃣ Pizza",
+        "question": "🏠 What is the F Block RF's last name?\n1️⃣ Timperio\n2️⃣ Giuseppe\n3️⃣ Carbonara\n4️⃣ Giovanni",
         "options": [1, 2, 3, 4],
         "answer": 0
     }
