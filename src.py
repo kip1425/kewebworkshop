@@ -141,7 +141,7 @@ async def sendQuestion(message, user):
         buttons.append(InlineKeyboardButton(description, callback_data=str(index)))
 
     await message.reply_text(
-        f"🧠 Q{quesIndex + 1}: {question['question']}",
+        f"Q{quesIndex + 1}: {question['question']}",
         reply_markup=InlineKeyboardMarkup([buttons])
     )
 
