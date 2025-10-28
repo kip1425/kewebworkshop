@@ -11,42 +11,42 @@ DB_URL = os.getenv("DATABASE_PUBLIC_URL")
 # Quiz questions
 QUESTIONS = [
     {
-        "question": "What is KEVII's JCRC President's name?\n1. Butterchicken\n2. Bhattarchicken\n3. Bhattacharya\n4. Bhattarcharya",
+        "question": "🐔 What is KEVII's JCRC President's name?\n1️⃣ Butterchicken\n2️⃣ Bhattarchicken\n3️⃣ Bhattacharya\n4️⃣ Bhattarcharya",
         "options": [1, 2, 3, 4],
         "answer": 2
     },
     {
-        "question": "How many chickens are there in KE?\n1. 5\n2. 69\n3. 100\n4. Too many",
+        "question": "🐤 How many chickens are there in KE?\n1️⃣ 5\n2️⃣ 69\n3️⃣ 100\n4️⃣ Too many",
         "options": [1, 2, 3, 4],
         "answer": 3
     },
     {
-        "question": "Do you like eating fried chicken?\n1. Yes\n2. No",
+        "question": "🍗 Do you like eating fried chicken?\n1️⃣ Yes\n2️⃣ No",
         "options": [1, 2],
         "answer": 0
     },
     {
-        "question": "Who was the KEWOC VPD? Justin _______\n1. Chan\n2. Poh\n3. Solomon\n4. Adhiv",
+        "question": "👔 Who was the KEWOC VPD? Justin _______\n1️⃣ Chan\n2️⃣ Poh\n3️⃣ Solomon\n4️⃣ Adiyoga",
         "options": [1, 2, 3, 4],
         "answer": 2
     },
     {
-        "question": "Which Malaysian PM stayed in KE?\n1. Horng Ern\n2. Kai Jun\n3. Yu Le\n4. Zi Jian",
+        "question": "🇲🇾 Which Malaysian PM stayed in KE?\n1️⃣ Horng Ern\n2️⃣ Kai Jun\n3️⃣ Yu Le\n4️⃣ Zi Jian",
         "options": [1, 2, 3, 4],
         "answer": 0
     },
     {
-        "question": "On which day does the DH serve Cai Fan?\n1. Monday\n2. Tuesday\n3. Friday\n4. Saturday",
+        "question": "🍱 On which day does the DH serve Cai Fan?\n1️⃣ Monday\n2️⃣ Tuesday\n3️⃣ Friday\n4️⃣ Saturday",
         "options": [1, 2, 3, 4],
         "answer": 1
     },
     {
-        "question": "Which professor is interested in researching monkeys near KE?\n1. Sivasothi N\n2. Martin Henz\n3. Sie Min\n4. Peppe",
+        "question": "🐒 Which professor researches monkeys near KE?\n1️⃣ Sivasothi N\n2️⃣ Martin Henz\n3️⃣ Sie Min\n4️⃣ Peppe",
         "options": [1, 2, 3, 4],
         "answer": 0
     },
     {
-        "question": "What is the F Block RF's last name?\n1. Timperio\n2. Giuseppe\n3. Carbonara\n4. Giovanni",
+        "question": "🏠 What is the F Block RF's last name?\n1️⃣ Timperio\n2️⃣ Giuseppe\n3️⃣ Carbonara\n4️⃣ Pizza",
         "options": [1, 2, 3, 4],
         "answer": 0
     }
@@ -114,7 +114,7 @@ async def start(update, context):
 
     # Start at first ques
     userProgress[userId] = 0
-    await update.message.reply_text("Type /leaderboard to view leaderboard!")
+    await update.message.reply_text("🎯 Welcome to the KEVII Quiz! Type /leaderboard to view the top players 🏆")
 
     # Create a new attempt row in the database
     await createAttempt(userId, username)
@@ -130,7 +130,7 @@ async def sendQuestion(message, user):
     # Checks if user has finished all questions
     if quesIndex >= len(QUESTIONS):
         finalScore = await getScore(userId)
-        await message.reply_text(f"🎉 Quiz complete! You scored {finalScore}/{len(QUESTIONS)}")
+        await message.reply_text(f"🎉 Quiz complete! You scored 🏅 {finalScore}/{len(QUESTIONS)}")
         return
 
     question = QUESTIONS[quesIndex]
@@ -141,7 +141,7 @@ async def sendQuestion(message, user):
         buttons.append(InlineKeyboardButton(description, callback_data=str(index)))
 
     await message.reply_text(
-        f"Q{quesIndex + 1}: {question['question']}",
+        f"🧠 Q{quesIndex + 1}: {question['question']}",
         reply_markup=InlineKeyboardMarkup([buttons])
     )
 
@@ -162,7 +162,7 @@ async def processAnswer(update, context):
     # Move to the next question
     userProgress[userId] += 1
     if userProgress[userId] < len(QUESTIONS):
-        await query.message.reply_text("Next question:")
+        await query.message.reply_text("👉 Next question:")
 
     # Send next question or completion message
     await sendQuestion(query.message, query.from_user)
@@ -175,7 +175,7 @@ async def leaderboard(update, context):
     )
     await conn.close()
 
-    text = "Top KEVIIANS:\n"
+    text = "🏆 *Top KEVIIANS Leaderboard* 🏆\n"
     for i, row in enumerate(rows, start=1):
         text += f"{i}. @{row['username']} Score: {row['score']} Attempt: {row['attempt']}\n"
     await update.message.reply_text(text)
