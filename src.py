@@ -158,11 +158,6 @@ async def processAnswer(update, context):
     userAnswer = int(query.data)
     if userAnswer == question["answer"]:
         await updateScore(userId, 1)
-        response = "Correct!"
-    else:
-        response = "Wrong!"
-
-    await query.message.reply_text(response)
 
     # Move to the next question
     userProgress[userId] += 1
