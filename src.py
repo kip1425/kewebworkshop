@@ -12,7 +12,7 @@ DB_URL = os.getenv("DATABASE_PUBLIC_URL")
 QUESTIONS = [
     {
         "question": "What is KEVII's JCRC President's name?",
-        "options": ["Arko Butterchicken", "Arko Bhattarchicken", "Arko Bhattacharya", "Arko Bhattarcharya"],
+        "options": ["Butterchicken", "Bhattarchicken", "Bhattacharya", "Bhattarcharya"],
         "answer": 2
     },
     {
@@ -23,6 +23,16 @@ QUESTIONS = [
     {
         "question": "Do you like eating fried chicken?",
         "options": ["Yes", "No"],
+        "answer": 0
+    },
+    {
+        "question": "Was was the KEWOC VPD? Justin ______",
+        "options": ["Chan", "Poh", "Solomon", "Adiyoga"],
+        "answer": 2
+    },
+    {
+        "question": "Which Malaysian PM stayed in KE?",
+        "options": ["Horng Ern", "Yu Le", "Kai Jun", "Zi Jian"],
         "answer": 0
     }
 ]
@@ -111,9 +121,10 @@ async def sendQuestion(message, user):
     question = QUESTIONS[quesIndex]
 
     # Create buttons for inline keyboard
-    buttons = []
-    for index, description in enumerate(question["options"]):
-        buttons.append(InlineKeyboardButton(description, callback_data=str(index)))
+    buttons = [
+        [InlineKeyboardButton(opt, callback_data=str(i))]
+        for i, opt in enumerate(question["options"])
+    ]
 
     await message.reply_text(
         f"Q{quesIndex + 1}: {question['question']}",
