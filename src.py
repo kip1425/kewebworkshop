@@ -41,11 +41,6 @@ QUESTIONS = [
         "answer": 1
     },
     {
-        "question": "🐒 Which professor researches monkeys near KE?\n1️⃣ Sivasothi N\n2️⃣ Martin Henz\n3️⃣ Sie Min\n4️⃣ Peppe",
-        "options": [1, 2, 3, 4],
-        "answer": 0
-    },
-    {
         "question": "🏠 What is the F Block RF's last name?\n1️⃣ Timperio\n2️⃣ Giuseppe\n3️⃣ Esposito\n4️⃣ Guerriero",
         "options": [1, 2, 3, 4],
         "answer": 0
